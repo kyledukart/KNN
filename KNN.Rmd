@@ -1,0 +1,115 @@
+---
+title: "Lab 3"
+author: "Kyle Dukart"
+date: "January 30, 2019"
+output: html_document
+---
+
+```{r setup}
+knitr::opts_chunk$set(echo = TRUE)
+bcdata = read.csv("C:/Users/Kyle/Desktop/rfiles/wisc_bc_data.csv")
+#str(bcdata)
+#summary(bcdata)
+```
+
+## Breast Cancer Data
+
+```{r data analysis}
+#drop id
+bcdatanoid <- subset( bcdata, select = -id ) #wbcd <- wbcd[-1] is better
+#label benign/malignant
+labeledbcdata = factor(bcdatanoid$diagnosis, labels=c("Benign","Malignant"))
+#percentage of benign/malignant
+library(gmodels)
+CrossTable(labeledbcdata)
+#summary of features
+summary(bcdatanoid$radius_mean)
+summary(bcdatanoid$area_mean)
+summary(bcdatanoid$smoothness_mean)
+```
+
+```{r normalize}
+# create normalization function
+normalize <-function(x) {return((x -min(x)) / (max(x) -min(x)));}
+testfactors = c(1, 20, 30, 40, 80, 100)
+testfactors
+normaltest = normalize(testfactors)
+normaltest
+bcdata_noid_nodiag <- subset(bcdatanoid, select = -diagnosis)
+wbcd_n <- as.data.frame(lapply(bcdata_noid_nodiag, normalize))
+summary(wbcd_n$radius_mean)
+summary(wbcd_n$area_mean)
+summary(wbcd_n$smoothness_mean)
+wbcd_train = wbcd_n[1:469,]
+wbcd_test = wbcd_n[470:569,]
+#str(wbcd_train)
+#str(wbcd_test)
+wbcd_train_labels <- labeledbcdata[1:469]
+wbcd_test_labels <- labeledbcdata[470:569]
+#summary(wbcd_train_labels)
+#summary(wbcd_test_labels)
+```
+
+```{r train}
+library(class)
+wbcd_test_pred <- knn(wbcd_train, wbcd_test, wbcd_train_labels, 15)
+summary(wbcd_test_pred)
+```
+
+```{r test}
+CrossTable(wbcd_test_pred, wbcd_test_labels)
+```
+
+## Improvements to model
+
+1) You can improve the KNN model by adjusting the value you chose for K, or by changing the method you use to normalize the data.
+
+2) Using Zscore as normalization method:
+``` {r zscore}
+zscore <- function(x) {return((x-mean(x))/sd(x))}
+wbcd_z <- as.data.frame(lapply(bcdata_noid_nodiag, zscore))
+summary(wbcd_z$radius_mean)
+summary(wbcd_z$area_mean)
+summary(wbcd_z$smoothness_mean)
+wbcd_ztrain = wbcd_z[1:469,]
+wbcd_ztest = wbcd_z[470:569,]
+wbcd_train_labels <- labeledbcdata[1:469]
+wbcd_test_labels <- labeledbcdata[470:569]
+wbcd_test_zpred <- knn(wbcd_ztrain, wbcd_ztest, wbcd_train_labels, 15)
+summary(wbcd_test_zpred)
+CrossTable(wbcd_test_zpred, wbcd_test_labels)
+```
+
+2) Trying different values for K:
+``` {r ktest}
+wbcd_test_zpred11 <- knn(wbcd_ztrain, wbcd_ztest, wbcd_train_labels, 11)
+CrossTable(wbcd_test_zpred11, wbcd_test_labels)
+wbcd_test_zpred12 <- knn(wbcd_ztrain, wbcd_ztest, wbcd_train_labels, 12)
+CrossTable(wbcd_test_zpred12, wbcd_test_labels)
+wbcd_test_zpred13 <- knn(wbcd_ztrain, wbcd_ztest, wbcd_train_labels, 13)
+CrossTable(wbcd_test_zpred13, wbcd_test_labels)
+wbcd_test_zpred14 <- knn(wbcd_ztrain, wbcd_ztest, wbcd_train_labels, 14)
+CrossTable(wbcd_test_zpred14, wbcd_test_labels)
+wbcd_test_zpred16 <- knn(wbcd_ztrain, wbcd_ztest, wbcd_train_labels, 16)
+CrossTable(wbcd_test_zpred16, wbcd_test_labels)
+wbcd_test_zpred17 <- knn(wbcd_ztrain, wbcd_ztest, wbcd_train_labels, 17)
+CrossTable(wbcd_test_zpred17, wbcd_test_labels)
+wbcd_test_zpred18 <- knn(wbcd_ztrain, wbcd_ztest, wbcd_train_labels, 18)
+CrossTable(wbcd_test_zpred18, wbcd_test_labels)
+wbcd_test_zpred19 <- knn(wbcd_ztrain, wbcd_ztest, wbcd_train_labels, 19)
+CrossTable(wbcd_test_zpred19, wbcd_test_labels)
+wbcd_test_zpred20 <- knn(wbcd_ztrain, wbcd_ztest, wbcd_train_labels, 20)
+CrossTable(wbcd_test_zpred20, wbcd_test_labels)
+wbcd_test_zpred22 <- knn(wbcd_ztrain, wbcd_ztest, wbcd_train_labels, 22)
+CrossTable(wbcd_test_zpred22, wbcd_test_labels)
+wbcd_test_zpred24 <- knn(wbcd_ztrain, wbcd_ztest, wbcd_train_labels, 24)
+CrossTable(wbcd_test_zpred24, wbcd_test_labels)
+wbcd_test_zpred26 <- knn(wbcd_ztrain, wbcd_ztest, wbcd_train_labels, 26)
+CrossTable(wbcd_test_zpred26, wbcd_test_labels)
+wbcd_test_zpred28 <- knn(wbcd_ztrain, wbcd_ztest, wbcd_train_labels, 28)
+CrossTable(wbcd_test_zpred28, wbcd_test_labels)
+wbcd_test_zpred30 <- knn(wbcd_ztrain, wbcd_ztest, wbcd_train_labels, 30)
+CrossTable(wbcd_test_zpred30, wbcd_test_labels)
+```
+
+3) Changing from min-max normalization to z-score standardization did not seem to effect the outcome significantly in this example.  Selecting different K values does significantly change the accuracy of the model.  Selecting a high k value increases the amount of type 2 errors.  Selecting a small k value increased the amount of errors, but also shifted some errors from type 2 to type 1, which may be more beneficial.
